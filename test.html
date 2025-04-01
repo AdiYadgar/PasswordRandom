@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מחולל סיסמאות</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            direction: rtl;
+            background: linear-gradient(to right, #ffcc70, #ffeb99);
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            margin: 50px auto;
+            max-width: 400px;
+            background: rgba(255, 255, 255, 0.513);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        input, button {
+            margin: 5px 0;
+            padding: 10px;
+            width: 100%;
+            border-radius: 5px;
+            border: 1px solid #8f2424;
+            font-size: 16px;
+            outline: none;
+        }
+        button {
+            background-color: #ff7043;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        button:hover {
+            background-color: #ff5722;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            background: #f5f5f5;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .copy, .delete {
+            padding: 5px 10px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .copy { background: #4caf50; color: white; }
+        .copy:hover { background: #388e3c; }
+        .delete { background: red; color: white; }
+        .delete:hover { background: darkred; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 מחולל סיסמאות</h1>
+        <input type="text" id="project-name" placeholder="שם פרויקט">
+        <input type="text" id="username" placeholder="שם משתמש">
+        <input type="number" id="length" min="6" max="100" value="12">
+        <button onclick="generatePassword()">צור סיסמה</button>
+    </div>
+
+    <div class="container">
+        <h2>🛠 סיסמאות שנשמרו</h2>
+        <ul id="password-list"></ul>
+    </div>
+
+    <script>
+        let currentPassword = "";
+        
+        function generatePassword() {
+            const length = document.getElementById("length").value;
+            const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()";
+            let password = "";
+            for (let i = 0; i < length; i++) {
+                password += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            currentPassword = password;
+            alert("הסיסמה שנוצרה: " + password);
+            savePasswordInfo();
+        }
+
+        function savePasswordInfo() {
+            const projectName = document.getElementById("project-name").value.trim();
+            const username = document.getElementById("username").value.trim();
+            if (!projectName || !username || !currentPassword) {
+                alert("אנא מלא את כל השדות.");
+                return;
+            }
+
+            const now = new Date().toLocaleString("he-IL");
+            let passwords = JSON.parse(localStorage.getItem("passwords")) || [];
+            passwords.push({ projectName, username, password: currentPassword, date: now });
+            localStorage.setItem("passwords", JSON.stringify(passwords));
+            displaySavedPasswords();
+        }
+
+        function displaySavedPasswords() {
+            const passwordList = document.getElementById("password-list");
+            passwordList.innerHTML = "";
+            let passwords = JSON.parse(localStorage.getItem("passwords")) || [];
+            
+            passwords.forEach(({ projectName, username, password, date }) => {
+                const li = document.createElement("li");
+                li.innerHTML = `<strong>${projectName}</strong> - 🧑 ${username} <br>🔑 ${password} <br>⏰ ${date}
+                    <button class='copy' onclick='copyPassword("${password}")'>📋 העתק</button>
+                    <button class='delete' onclick='deletePassword("${projectName}", "${username}")'>🗑 מחק</button>`;
+                passwordList.appendChild(li);
+            });
+        }
+
+        function copyPassword(password) {
+            navigator.clipboard.writeText(password).then(() => {
+                alert("הסיסמה הועתקה ללוח!");
+            });
+        }
+
+        function deletePassword(projectName, username) {
+            let passwords = JSON.parse(localStorage.getItem("passwords")) || [];
+            passwords = passwords.filter(p => p.projectName !== projectName || p.username !== username);
+            localStorage.setItem("passwords", JSON.stringify(passwords));
+            displaySavedPasswords();
+        }
+
+        document.addEventListener("DOMContentLoaded", displaySavedPasswords);
+    </script>
+</body>
+</html>
